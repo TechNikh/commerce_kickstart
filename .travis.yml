@@ -1,5 +1,6 @@
 language: php
-sudo: false
+# sudo to install imagemagick
+sudo: true
 
 php:
   - 5.6
@@ -7,6 +8,9 @@ php:
 branches:
   except:
     - 7.x-1.x
+
+addons:
+  firefox: "29.0"
 
 mysql:
   database: drupal
@@ -79,6 +83,12 @@ install:
   - BEHAT_PARAMS=`echo $BEHAT_PARAMS | sed -e s#BUILD_TOP#$BUILD_TOP#`
   - export BEHAT_PARAMS
 
+  # Install imagemagick
+  - sudo apt-get install -y imagemagick
+
+  # Build baseline site
+  - drush dl commerce_kickstart --drupal-project-rename=commerce_kickstart_baseline
+
   # Build Codebase
   - mkdir private_files
   - mkdir profiles
@@ -138,6 +148,14 @@ install:
 
 before_script:
 
+  # Start baseline site(Correct version of the site) at http://127.0.0.1:7777/
+  - cd commerce_kickstart_baseline
+  - drush si commerce_kickstart --db-url=mysql://root:@127.0.0.1/drupal_baseline --account-name=admin --account-pass=admin --site-mail=admin@example.com --site-name="Commerce Kickstart" --yes -v -d
+  - drush pm-disable dblog --yes
+  - drush runserver --server=builtin 7777 > /dev/null 2>&1 &
+  - nc -zvv localhost 7777; out=$?; while [[ $out -ne 0 ]]; do echo "Retry hit port 7777..."; nc -zvv localhost 7777; out=$?; sleep 5; done
+  - cd ..
+
   # Do the site install (either the current revision or old for the upgrade).
   - if [[ "$UPGRADE" == none ]]; then cd drupal; else cd commerce_kickstart-$UPGRADE; fi
 
@@ -158,10 +176,28 @@ before_script:
   # If we're an upgrade test, run the upgrade process.
   - if [[ "$UPGRADE" != none ]]; then cp -a ../commerce_kickstart-$UPGRADE/sites/default/* sites/default/ && drush updb --yes; drush cc all;  fi
 
-  # Start server
+  # Start server(Test version of the site) at http://127.0.0.1:8888/
   - drush runserver --server=builtin 8888 > /dev/null 2>&1 &
   - nc -zvv localhost 8888; out=$?; while [[ $out -ne 0 ]]; do echo "Retry hit port 8888..."; nc -zvv localhost 8888; out=$?; sleep 5; done
   - cd profiles/commerce_kickstart/tests/behat
+
+  # Introduce visual difference by disabling the blog module
+  - drush dis commerce_kickstart_blog -y
+
+  #Setup Drulenium
+  - drush dl drulenium-7.x-2.x-dev -y
+  - drush en libraries -y
+  - drush en drulenium drulenium_local_selenium drulenium_hosting_client -y
+  - drush vr-download-webdriver
+  - drush vset --yes drulenium_vr_config_server_opt 'drulenium_local_selenium'
+  - drush vset --yes drulenium_vr_config_image_server_opt 'local'
+  - drush vset --yes drulenium_vr_release_imagemagick_path '/usr/bin'
+  - drush vset --yes drulenium_vr_release_notify_email 'bot@technikh.com'
+  - drush dl drulenium_imgur-7.x-1.x-dev
+  - drush en drulenium_imgur -y
+  - drush imgur-download-client -y
+  - drush vset --yes drulenium_imgur_client_id $IMGUR_CLIENT_ID -q
+  - drush vset --yes drulenium_imgur_client_secret $IMGUR_CLIENT_SECRET -q
 
 script:
 
@@ -174,6 +210,12 @@ script:
   # Run Behat tests.
   - if [[ "$TEST_FEATURES_OVERRIDES" != 1 ]]; then ./bin/behat --config behat.travis.yml --tags ~@overrides; fi
   - if [[ "$TEST_FEATURES_OVERRIDES" == 1 ]]; then ./bin/behat --config behat.travis.yml --tags @overrides; fi
+
+  # Run Drulenium tests.
+  - drush vrc "http://127.0.0.1:7777/" --pages=products
+  - drush vrc "http://127.0.0.1:8888/" --pages=products
+  - drush vr-diff
+  - drush vr-diff-upload
 
 notifications:
 
