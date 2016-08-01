@@ -192,7 +192,7 @@ before_script:
   - drush vset --yes drulenium_vr_config_server_opt 'drulenium_local_selenium'
   - drush vset --yes drulenium_vr_config_image_server_opt 'local'
   - drush vset --yes drulenium_vr_release_imagemagick_path '/usr/bin'
-  - drush vset --yes drulenium_vr_release_notify_email 'bot@technikh.com'
+  - drush vset --yes drulenium_vr_api_secret $DRULENIUM_ORG_API_SECRET -q
   - drush dl drulenium_imgur-7.x-1.x-dev
   - drush en drulenium_imgur -y
   - drush imgur-download-client -y
