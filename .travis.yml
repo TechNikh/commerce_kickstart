@@ -215,7 +215,7 @@ script:
   - drush vrc "http://127.0.0.1:7777/" --pages=products
   - drush vrc "http://127.0.0.1:8888/" --pages=products
   - drush vr-diff
-  - drush vr-diff-upload
+  - drush vr-diff-upload --project_id=$DRULENIUM_ORG_PROJECT_UUID
 
 notifications:
 
