@@ -182,7 +182,7 @@ before_script:
   - cd profiles/commerce_kickstart/tests/behat
 
   # Introduce visual difference by disabling the blog module
-  - drush dis commerce_kickstart_blog -y
+  #- drush dis commerce_kickstart_blog -y
 
   #Setup Drulenium
   - drush dl drulenium-7.x-2.x-dev -y
@@ -211,11 +211,22 @@ script:
   - if [[ "$TEST_FEATURES_OVERRIDES" != 1 ]]; then ./bin/behat --config behat.travis.yml --tags ~@overrides; fi
   - if [[ "$TEST_FEATURES_OVERRIDES" == 1 ]]; then ./bin/behat --config behat.travis.yml --tags @overrides; fi
 
+  # Getting commit message: https://github.com/travis-ci/travis-ci/issues/965
+  # https://github.com/twbs/bootstrap/blob/e3f4072a9e1f1163c5b7b6a52d9b2632569f90fb/.travis.yml#L9
+  - "export TRAVIS_COMMIT_MSG=\"$(git log --format=%B --no-merges -n 1)\""
+  - echo "$TRAVIS_COMMIT_MSG"
+
+  # Import Drulenium tests
+  - export TEST_PAGES=$(echo `curl -s http://drulenium.org/api/v1/project/$DRULENIUM_ORG_PROJECT_UUID | jq -r '.tests | join(",")'`)
+  - echo "$TEST_PAGES";
+  - IFS=',' read -ra ADDR <<< "$TEST_PAGES"
+  - for i in "${ADDR[@]}"; do drush vr-test-import $i travis-regression; done
+
   # Run Drulenium tests.
-  - drush vrc "http://127.0.0.1:7777/" --pages=products
-  - drush vrc "http://127.0.0.1:8888/" --pages=products
-  - drush vr-diff
-  - drush vr-diff-upload --project_id=$DRULENIUM_ORG_PROJECT_UUID
+  - drush vrc "http://127.0.0.1:7777/" "$TRAVIS_COMMIT_MSG" --preset_category=travis-regression
+  - drush vrc "http://127.0.0.1:8888/" "$TRAVIS_COMMIT_MSG" --preset_category=travis-regression
+  - drush vr-diff --preset_category=travis-regression
+  - drush vr-diff-upload --preset_category=travis-regression --project_id=$DRULENIUM_ORG_PROJECT_UUID
 
 notifications:
 
