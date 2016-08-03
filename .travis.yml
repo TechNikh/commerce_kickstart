@@ -198,6 +198,9 @@ before_script:
   - drush imgur-download-client -y
   - drush vset --yes drulenium_imgur_client_id $IMGUR_CLIENT_ID -q
   - drush vset --yes drulenium_imgur_client_secret $IMGUR_CLIENT_SECRET -q
+  # Test as admin user
+  - drush vset --yes drulenium_vr_release_user_name 'admin' -q
+  - drush vset --yes drulenium_vr_release_user_pass 'admin' -q
 
 script:
 
