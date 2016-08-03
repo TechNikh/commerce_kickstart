@@ -121,8 +121,8 @@ install:
 
   # Get Selenium
   - wget http://selenium-release.storage.googleapis.com/2.42/selenium-server-standalone-2.42.1.jar
-  - java -jar selenium-server-standalone-2.42.1.jar > /dev/null 2>&1 &
-  - nc -zvv localhost 4444; out=$?; while [[ $out -ne 0 ]]; do echo "Retry hit port 4444..."; nc -zvv localhost 4444; out=$?; sleep 5; done
+  - java -jar selenium-server-standalone-2.42.1.jar -timeout=20 -browserTimeout=60 > /tmp/selenium.log 2> /tmp/selenium.error &
+  #- nc -zvv localhost 4444; out=$?; while [[ $out -ne 0 ]]; do echo "Retry hit port 4444..."; nc -zvv localhost 4444; out=$?; sleep 5; done
 
    # Disable sendmail
   - echo sendmail_path=`which true` >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
