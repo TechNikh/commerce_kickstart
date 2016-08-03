@@ -182,7 +182,7 @@ before_script:
   - cd profiles/commerce_kickstart/tests/behat
 
   # Introduce visual difference by disabling the blog module
-  #- drush dis commerce_kickstart_blog -y
+  - drush dis commerce_kickstart_blog -y
 
   #Setup Drulenium
   - drush dl drulenium-7.x-2.x-dev -y
