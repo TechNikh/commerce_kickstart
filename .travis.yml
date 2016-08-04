@@ -148,11 +148,12 @@ install:
 
 before_script:
 
-  # Start baseline site(Correct version of the site) at http://127.0.0.1:7777/
+  # Start baseline site(Correct version of the site) at http://127.0.0.1:8080/
   - cd commerce_kickstart_baseline
   - drush si commerce_kickstart --db-url=mysql://root:@127.0.0.1/drupal_baseline --account-name=admin --account-pass=admin --site-mail=admin@example.com --site-name="Commerce Kickstart" --yes -v -d
   - drush pm-disable dblog --yes
-  - drush runserver --server=builtin 7777 > /dev/null 2>&1 &
+  - drush runserver 127.0.0.1:8080 &
+  - until netstat -an 2>/dev/null | grep '8080.*LISTEN'; sleep 1; curl -I http://127.0.0.1:8080 ; do true; done
   #- nc -zvv localhost 7777; out=$?; while [[ $out -ne 0 ]]; do echo "Retry hit port 7777..."; nc -zvv localhost 7777; out=$?; sleep 5; done
   - cd ..
 
@@ -226,7 +227,7 @@ script:
   - for i in "${ADDR[@]}"; do drush vr-test-import $i travis-regression; done
 
   # Run Drulenium tests.
-  - drush vrc "http://127.0.0.1:7777/" "$TRAVIS_COMMIT_MSG" --preset_category=travis-regression
+  - drush vrc "http://127.0.0.1:8080/" "$TRAVIS_COMMIT_MSG" --preset_category=travis-regression
   - drush vrc "http://127.0.0.1:8888/" "$TRAVIS_COMMIT_MSG" --preset_category=travis-regression
   - drush vr-diff --preset_category=travis-regression
   - drush vr-diff-upload --preset_category=travis-regression --project_id=$DRULENIUM_ORG_PROJECT_UUID
