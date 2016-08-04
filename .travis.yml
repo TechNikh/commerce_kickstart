@@ -137,7 +137,7 @@ install:
 
   # Increase the MySQL server timetout and packet size.
   - mysql -e "SET GLOBAL wait_timeout = 36000;"
-  - mysql -e "SET GLOBAL max_allowed_packet = 33554432;"
+  - mysql -e "SET GLOBAL max_allowed_packet = 134209536;"
 
   # Enable APC
   - |
@@ -153,7 +153,7 @@ before_script:
   - drush si commerce_kickstart --db-url=mysql://root:@127.0.0.1/drupal_baseline --account-name=admin --account-pass=admin --site-mail=admin@example.com --site-name="Commerce Kickstart" --yes -v -d
   - drush pm-disable dblog --yes
   - drush runserver --server=builtin 7777 > /dev/null 2>&1 &
-  - nc -zvv localhost 7777; out=$?; while [[ $out -ne 0 ]]; do echo "Retry hit port 7777..."; nc -zvv localhost 7777; out=$?; sleep 5; done
+  #- nc -zvv localhost 7777; out=$?; while [[ $out -ne 0 ]]; do echo "Retry hit port 7777..."; nc -zvv localhost 7777; out=$?; sleep 5; done
   - cd ..
 
   # Do the site install (either the current revision or old for the upgrade).
@@ -178,7 +178,7 @@ before_script:
 
   # Start server(Test version of the site) at http://127.0.0.1:8888/
   - drush runserver --server=builtin 8888 > /dev/null 2>&1 &
-  - nc -zvv localhost 8888; out=$?; while [[ $out -ne 0 ]]; do echo "Retry hit port 8888..."; nc -zvv localhost 8888; out=$?; sleep 5; done
+  #- nc -zvv localhost 8888; out=$?; while [[ $out -ne 0 ]]; do echo "Retry hit port 8888..."; nc -zvv localhost 8888; out=$?; sleep 5; done
   - cd profiles/commerce_kickstart/tests/behat
 
   # Introduce visual difference by disabling the blog module
@@ -233,4 +233,4 @@ script:
 
 notifications:
 
-  irc: "chat.freenode.net#drupal-commerce"
+  irc: "chat.freenode.net#drupal-commerce-visual"
